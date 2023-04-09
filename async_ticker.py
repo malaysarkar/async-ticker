@@ -32,7 +32,10 @@ class TickerClientProtocol(WebSocketClientProtocol):
         """
         Called when connection is closed
         """
-        print("WebSocket connection closed: {0}".format(reason))
+        if self.factory.on_close:
+            self.factory.on_close(wasClean, code, reason)
+        else:
+            print("WebSocket connection closed: {0}".format(reason))
 
 
 class TickerClientFactory(WebSocketClientFactory):
@@ -47,6 +50,7 @@ class TickerClientFactory(WebSocketClientFactory):
         self.ws = None
         self.on_message = None
         self.on_connect = None
+        self.on_close = None
 
         super(TickerClientFactory, self).__init__(*args, **kwargs)
 
@@ -82,6 +86,7 @@ class MainTicker():
         self.on_ticks = None
         self.on_connect = None
         self.on_message = None
+        self.on_close = None
 
     def create_connection(self, loop):
         """
@@ -95,6 +100,7 @@ class MainTicker():
         # Register private callback
         self.factory.on_connect = self._on_connect
         self.factory.on_message = self._on_message
+        self.factory.on_close = self._on_close
 
         # Create asyncio connection
         connection = loop.create_connection(self.factory, "ws.kite.trade", 443, ssl=True)
@@ -107,6 +113,13 @@ class MainTicker():
         self.ws = ws
         if self.on_connect:
             self.on_connect(self, response)
+
+    def _on_close(self, *args, **kwargs):
+        """
+        proxy for on_close
+        """
+        if self.on_close:
+            self.on_close(*args, **kwargs)
 
     def subscribe(self, token_list):
         """
