@@ -1,10 +1,9 @@
-import six
-import asyncio
-import struct
 import json
+import struct
 
-from autobahn.asyncio.websocket import WebSocketClientProtocol, \
-    WebSocketClientFactory
+import six
+from autobahn.asyncio.websocket import WebSocketClientFactory, WebSocketClientProtocol
+
 
 class TickerClientProtocol(WebSocketClientProtocol):
     """ Kite ticker autobahn WebSocket base protocol """
@@ -84,7 +83,7 @@ class MainTicker():
         self.on_connect = None
         self.on_message = None
 
-    def connect_ws(self):
+    def create_connection(self, loop):
         """
         Establish ws connection
         """
@@ -97,11 +96,9 @@ class MainTicker():
         self.factory.on_connect = self._on_connect
         self.factory.on_message = self._on_message
 
-        # Run an infinite loop using asyncio
-        loop = asyncio.get_event_loop()
-        coro = loop.create_connection(self.factory, "ws.kite.trade", 443, ssl=True)
-        loop.run_until_complete(coro)
-        loop.run_forever()
+        # Create asyncio connection
+        connection = loop.create_connection(self.factory, "ws.kite.trade", 443, ssl=True)
+        return connection
 
     def _on_connect(self, ws, response):
         """ 

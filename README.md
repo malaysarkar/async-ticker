@@ -35,7 +35,9 @@ def on_connect(ws, response):
 
 ws.on_connect = on_connect
 ws.on_ticks = on_ticks
-ws.connect_ws()
+ws.create_connection(asyncio.get_event_loop())
+asyncio.get_event_loop().run_forever()
+
 ```
 
 ## Response
